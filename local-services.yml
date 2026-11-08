@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:6
+          ports:
+            - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: songs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: songs
+  template:
+    metadata:
+      labels:
+        app: songs
+    spec:
+      containers:
+        - name: songs
+          image: songs:1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MONGODB_SERVICE
+              value: mongodb
+            - name: MONGODB_PORT
+              value: "27017"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: songs
+spec:
+  selector:
+    app: songs
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pictures
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pictures
+  template:
+    metadata:
+      labels:
+        app: pictures
+    spec:
+      containers:
+        - name: pictures
+          image: pictures:1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pictures
+spec:
+  selector:
+    app: pictures
+  ports:
+    - port: 3000
+      targetPort: 3000
