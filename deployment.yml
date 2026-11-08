@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: djangoserver
+  name: djangoserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: djangoserver
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: djangoserver
+    spec:
+      containers:
+      - image: djangoserver:1
+        imagePullPolicy: IfNotPresent
+        name: djangoserver
+        env:
+        - name: SONG_URL
+          value: "http://songs:8080"
+        - name: PHOTO_URL
+          value: "http://pictures:3000"
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+      restartPolicy: Always
