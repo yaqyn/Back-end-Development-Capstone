@@ -1,4 +1,4 @@
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
 
@@ -33,7 +33,7 @@ class LoginForm(AuthenticationForm):
         fields = ["username", "password"]
 
 
-class SignUpForm(AuthenticationForm):
+class SignUpForm(UserCreationForm):
     username = forms.CharField(
         max_length=100,
         required=True,
@@ -44,7 +44,7 @@ class SignUpForm(AuthenticationForm):
             }
         ),
     )
-    password = forms.CharField(
+    password1 = forms.CharField(
         max_length=50,
         required=True,
         widget=forms.PasswordInput(
@@ -52,13 +52,23 @@ class SignUpForm(AuthenticationForm):
                 "placeholder": "Password",
                 "class": "form-control",
                 "data-toggle": "password",
-                "id": "password",
-                "name": "password",
-                "minlength": "3"
+                "minlength": "3",
+            }
+        ),
+    )
+    password2 = forms.CharField(
+        max_length=50,
+        required=True,
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "Confirm password",
+                "class": "form-control",
+                "data-toggle": "password",
+                "minlength": "3",
             }
         ),
     )
 
     class Meta:
         model = User
-        fields = ["username", "password"]
+        fields = ["username", "password1", "password2"]

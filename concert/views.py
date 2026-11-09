@@ -2,8 +2,6 @@ import os
 
 import requests as req
 from django.contrib.auth import login, logout
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -40,26 +38,14 @@ DEMO_PHOTOS = [
 
 def signup(request):
     if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        try:
-            user = User.objects.filter(username=username).first()
-            if user:
-                return render(
-                    request,
-                    "signup.html",
-                    {"form": SignUpForm, "message": "user already exists"},
-                )
-
-            user = User.objects.create(
-                username=username, password=make_password(password)
-            )
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
-        except User.DoesNotExist:
-            return render(request, "signup.html", {"form": SignUpForm})
+        return render(request, "signup.html", {"form": form})
 
-    return render(request, "signup.html", {"form": SignUpForm})
+    return render(request, "signup.html", {"form": SignUpForm()})
 
 
 def index(request):
