@@ -2,9 +2,11 @@ import os
 
 import requests as req
 from django.contrib.auth import login, logout
-from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from concert.forms import LoginForm, SignUpForm
 from concert.models import Concert, ConcertAttending
@@ -143,25 +145,21 @@ def concert_detail(request, id):
     )
 
 
+@login_required(login_url="login")
+@require_POST
 def concert_attendee(request):
-    if not request.user.is_authenticated:
-        return HttpResponseRedirect(reverse("index"))
+    concert = get_object_or_404(Concert, pk=request.POST.get("concert_id"))
+    attendee_status = request.POST.get("attendee_choice")
+    valid_statuses = {
+        choice for choice, _label in ConcertAttending.AttendingChoices.choices
+    }
+    if attendee_status not in valid_statuses:
+        return HttpResponseBadRequest("Invalid RSVP choice.")
 
-    if request.method == "POST":
-        concert_id = request.POST.get("concert_id")
-        attendee_status = request.POST.get("attendee_choice")
-        attendance = ConcertAttending.objects.filter(
-            concert_id=concert_id, user=request.user
-        ).first()
-
-        if attendance:
-            attendance.attending = attendee_status
-            attendance.save()
-        else:
-            ConcertAttending.objects.create(
-                concert_id=concert_id,
-                user=request.user,
-                attending=attendee_status,
-            )
+    ConcertAttending.objects.update_or_create(
+        concert=concert,
+        user=request.user,
+        defaults={"attending": attendee_status},
+    )
 
     return HttpResponseRedirect(reverse("concerts"))
